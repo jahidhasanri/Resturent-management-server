@@ -1,7 +1,8 @@
 const express = require('express')
+require('dotenv').config();
 const app = express()
 const cors=require('cors');
-const port = process.env.PROT || 3000;
+const port = process.env.PROT || 5000;
 //middleware
 app.use(cors());
 app.use(express.json());
@@ -23,12 +24,38 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
 
-const userCollaction = client.db("resturant-management").collection('user')
+const userCollaction = client.db("resturant-management").collection('users')
 
+//userCollection
+
+app.post('/users', async (req, res) => {
+  const user = req.body;
+  const query = { email: user.email };
+console.log(user);
+  try {
+    const isExist = await userCollaction.findOne(query);
+    if (isExist) {
+      return res.status(200).send(isExist);
+    }
+
+    const result = await userCollaction.insertOne({
+      name: user.name,
+      image: user.image,
+      email: user.email,
+      role: "user",
+    });
+
+    res.status(201).send(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'server error' });
+  }
+});
+
+
+ 
     
-    // await client.connect();
-    // // Send a ping to confirm a successful connection
-    // await client.db("admin").command({ ping: 1 });
+   
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
