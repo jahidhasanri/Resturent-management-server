@@ -25,6 +25,7 @@ async function run() {
   try {
 
 const userCollaction = client.db("resturant-management").collection('users')
+const dishesCollaction = client.db("resturant-management").collection('ALLdishes')
 
 //userCollection
 
@@ -52,7 +53,14 @@ console.log(user);
   }
 });
 
+// dishesCollaction
 
+
+app.post('/alldishes',async(req,res)=>{
+  const user = req.body
+ const result= await dishesCollaction.insertOne(user);
+ res.send(result)
+})
  
     
    
