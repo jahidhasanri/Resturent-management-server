@@ -26,6 +26,7 @@ async function run() {
 
 const userCollaction = client.db("resturant-management").collection('users')
 const dishesCollaction = client.db("resturant-management").collection('ALLdishes')
+const wishListCollaction = client.db("resturant-management").collection('wishlist')
 
 //userCollection
 
@@ -53,6 +54,23 @@ console.log(user);
   }
 });
 
+
+app.get('/users', async (req, res) => {
+  try {
+    const { email } = req.query;
+    const user = await userCollaction.findOne({ email: email });
+    
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    res.send(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
 // dishesCollaction
 
 
@@ -61,8 +79,41 @@ app.post('/alldishes',async(req,res)=>{
  const result= await dishesCollaction.insertOne(user);
  res.send(result)
 })
+
+app.get('/allsdishes',async(req,res)=>{
+  const allItem = dishesCollaction.find();
+  const resutl = await allItem.toArray();
+  res.send(resutl);
+})
  
-    
+// wishLishtCollection
+app.post('/wishes',async(req,res)=>{
+  const user = req.body
+ const result= await wishListCollaction.insertOne(user);
+ res.send(result)
+})
+
+ app.get("/wishes", async (req, res) => {
+      const { userId } = req.query;
+      if (!userId) return res.status(400).json({ message: "userId required" });
+      try {
+        const wishes = await wishListCollaction
+          .find({ userId: userId })
+          .toArray();
+        res.json(wishes);
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+      }
+    });
+
+
+app.get('/wishlist',async(req,res)=>{
+  const allItem = wishListCollaction.find();
+  const result = await allItem.toArray();
+  res.send(result);
+})
+
    
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
