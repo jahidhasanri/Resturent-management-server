@@ -9,7 +9,7 @@ app.use(express.json());
 
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.RS_USER}:${process.env.RS_PASS}@cluster0.e8jg2.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -71,6 +71,7 @@ app.get('/users', async (req, res) => {
   }
 });
 
+
 // dishesCollaction
 
 
@@ -84,6 +85,41 @@ app.get('/allsdishes',async(req,res)=>{
   const allItem = dishesCollaction.find();
   const resutl = await allItem.toArray();
   res.send(resutl);
+})
+
+ app.put("/dishes/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedDish = req.body;
+
+      try {
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            name: updatedDish.name,
+            price: updatedDish.price,
+            quantity: updatedDish.quantity,
+            image: updatedDish.image,
+            isBestSeller: updatedDish.isBestSeller,
+          },
+        };
+
+        const result = await dishesCollaction.updateOne(filter, updateDoc);
+        if (result.modifiedCount > 0) {
+          res.status(200).send({ message: "Dish updated successfully" });
+        } else {
+          res.status(404).send({ message: "No dish found or no changes made" });
+        }
+      } catch (error) {
+        console.error("Update error:", error);
+        res.status(500).send({ message: "Error updating dish" });
+      }
+    });
+
+app.delete('/allsdishes/:id',async(req,res)=>{
+const id = req.params.id;
+const query = {_id: new ObjectId(id)};
+const resutl = await dishesCollaction.deleteOne(query)
+res.send(resutl);
 })
  
 // wishLishtCollection
@@ -112,6 +148,13 @@ app.get('/wishlist',async(req,res)=>{
   const allItem = wishListCollaction.find();
   const result = await allItem.toArray();
   res.send(result);
+})
+
+app.delete('/wishes/:id',async(req,res)=>{
+const id = req.params.id;
+const query = {_id: new ObjectId(id)};
+const resutl = await wishListCollaction.deleteOne(query)
+res.send(resutl);
 })
 
    
