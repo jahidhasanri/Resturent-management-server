@@ -83,18 +83,6 @@ app.delete("/users/:id", async (req, res) => {
       res.send(result);
     });
 
-
-    app.put("/users/:id/role", async (req, res) => {
-      const id = req.params.id;
-      const { role } = req.body;
-      const result = await userCollaction.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: { role } }
-      );
-      res.send(result);
-    });
-
-
 // dishesCollaction
 
 

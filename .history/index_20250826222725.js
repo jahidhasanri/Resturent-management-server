@@ -71,29 +71,6 @@ app.get('/users', async (req, res) => {
   }
 });
 
-app.get('/allusers',async(req,res)=>{
-  const alluser= userCollaction.find();
-  const result = await alluser.toArray();
-  res.send(result);
-})
-
-app.delete("/users/:id", async (req, res) => {
-      const id = req.params.id;
-      const result = await userCollaction.deleteOne({ _id: new ObjectId(id) });
-      res.send(result);
-    });
-
-
-    app.put("/users/:id/role", async (req, res) => {
-      const id = req.params.id;
-      const { role } = req.body;
-      const result = await userCollaction.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: { role } }
-      );
-      res.send(result);
-    });
-
 
 // dishesCollaction
 
