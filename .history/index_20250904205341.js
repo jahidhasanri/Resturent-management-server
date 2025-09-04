@@ -181,31 +181,6 @@ const resutl = await wishListCollaction.deleteOne(query)
 res.send(resutl);
 })
 
-
-//card collection
-
-app.post('/cardItem', async (req, res) => {
-  const item = req.body;
-  if (!item.userId) return res.status(400).send({ success: false, message: "userId required" });
-
-  // Fix: Use _id instead of itemId since that's what you're sending from frontend
-  const query = { itemId: item.itemId, userId: item.userId };
-  console.log("Query for checking duplicate:", query);
-
-  try {
-    const isExist = await cardCollaction.findOne(query);
-    if (isExist) {
-      return res.status(200).send({ success: false, message: 'Item already exists in cart' });
-    }
-
-    const result = await cardCollaction.insertOne(item);
-    res.status(201).send({ success: true, message: 'Item added to cart', result });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'server error' });
-  }
-});
-
    
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {

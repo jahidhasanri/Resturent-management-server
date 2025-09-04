@@ -185,11 +185,10 @@ res.send(resutl);
 //card collection
 
 app.post('/cardItem', async (req, res) => {
-  const item = req.body;
+  const item = req.body; // এখানে ideally userId থাকবে
   if (!item.userId) return res.status(400).send({ success: false, message: "userId required" });
 
-  // Fix: Use _id instead of itemId since that's what you're sending from frontend
-  const query = { itemId: item.itemId, userId: item.userId };
+  const query = { itemId: item.itemId, userId: item.userId }; // userId + itemId check
   console.log("Query for checking duplicate:", query);
 
   try {

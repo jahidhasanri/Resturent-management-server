@@ -186,26 +186,23 @@ res.send(resutl);
 
 app.post('/cardItem', async (req, res) => {
   const item = req.body;
-  if (!item.userId) return res.status(400).send({ success: false, message: "userId required" });
-
-  // Fix: Use _id instead of itemId since that's what you're sending from frontend
-  const query = { itemId: item.itemId, userId: item.userId };
-  console.log("Query for checking duplicate:", query);
+  const query = { _id: new ObjectId(item.itemId) };  
+  console.log(query);
 
   try {
     const isExist = await cardCollaction.findOne(query);
     if (isExist) {
-      return res.status(200).send({ success: false, message: 'Item already exists in cart' });
+      return res.status(200).send({ message: 'Item already exists in cart' });
     }
 
-    const result = await cardCollaction.insertOne(item);
-    res.status(201).send({ success: true, message: 'Item added to cart', result });
+    const result = await cardCollaction.insertOne(item);  
+
+    res.status(201).send(result);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: 'server error' });
+    res.status(500).json({ message: 'server error' });
   }
 });
-
    
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
