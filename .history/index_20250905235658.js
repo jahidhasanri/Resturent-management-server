@@ -51,8 +51,7 @@ const tran_id = new ObjectId().toString();
       tran_id
     });
 
-const orderIds = orders.map(order => new ObjectId(order._id));
-    await orderInfoCollaction.deleteOne({ _id: { $in: orderIds } });
+
     // SSLCommerz Payment Data
     const data = {
       total_amount: total,
@@ -402,7 +401,21 @@ app.get("/orderInfo", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+app.delete("/orderInfo/:id", async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const result = await orderInfoCollaction.deleteOne({ _id: new ObjectId(orderId) });
 
+    if (result.deletedCount > 0) {
+      res.send({ success: true, message: "Order deleted successfully" });
+    } else {
+      res.status(404).send({ success: false, message: "Order not found" });
+    }
+  } catch (error) {
+    console.error("Delete Order Error:", error);
+    res.status(500).send({ success: false, message: "Internal Server Error" });
+  }
+});
 
    
     console.log("Pinged your deployment. You successfully connected to MongoDB!");

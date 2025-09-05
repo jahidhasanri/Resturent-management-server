@@ -8,9 +8,7 @@ const port = process.env.PROT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const store_id = process.env.StoreId
-const store_passwd = process.env.StorePass
-const is_live = false //true for live, false for sandbox
+
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.RS_USER}:${process.env.RS_PASS}@cluster0.e8jg2.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -32,110 +30,6 @@ const dishesCollaction = client.db("resturant-management").collection('ALLdishes
 const wishListCollaction = client.db("resturant-management").collection('wishlist')
 const cardCollaction = client.db("resturant-management").collection('card')
 const orderInfoCollaction = client.db("resturant-management").collection('OrderInfo')
-const FinalorderInfoCollaction = client.db("resturant-management").collection('order')
-
-
-//final order
-
-app.post("/finalOrder", async (req, res) => {
-  try {
-    const { orders, user, total } = req.body;
-const tran_id = new ObjectId().toString();
-    // Insert to DB
-    const result = await FinalorderInfoCollaction.insertOne({
-      orders,
-      user,
-      total,
-      paidstatus: "pending",
-      createdAt: new Date(),
-      tran_id
-    });
-
-const orderIds = orders.map(order => new ObjectId(order._id));
-    await orderInfoCollaction.deleteOne({ _id: { $in: orderIds } });
-    // SSLCommerz Payment Data
-    const data = {
-      total_amount: total,
-      currency: "BDT",
-      tran_id,
-      success_url: `http://localhost:5000/payment/success/${tran_id}`,
-      fail_url: `http://localhost:5000/payment/fail/${tran_id}`,
-      cancel_url: `http://localhost:5000/payment/cancel/${tran_id}`,
-      ipn_url: "http://localhost:5000/payment/ipn",
-      shipping_method: "Courier",
-      product_name: "Food Items",
-      product_category: "Restaurant",
-      product_profile: "general",
-      cus_name: user?.name || "Customer",
-      cus_email: user?.email || "customer@example.com",
-      cus_add1: "Dhaka",
-      cus_add2: "Dhaka",
-      cus_city: "Dhaka",
-      cus_state: "Dhaka",
-      cus_postcode: "1000",
-      cus_country: "Bangladesh",
-      cus_phone: user?.phoneNumber || "01700000000",
-      cus_fax: "01711111111",
-      ship_name: user?.name || "Customer",
-      ship_add1: "Dhaka",
-      ship_add2: "Dhaka",
-      ship_city: "Dhaka",
-      ship_state: "Dhaka",
-      ship_postcode: 1000,
-      ship_country: "Bangladesh",
-    };
-
-    const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
-    sslcz.init(data).then((apiResponse) => {
-      let GatewayPageURL = apiResponse.GatewayPageURL;
-      res.send({ url: GatewayPageURL });
-      console.log("Redirecting to:", GatewayPageURL);
-    });
-  } catch (err) {
-    console.error("FinalOrder Error:", err);
-    res.status(500).send({ error: "Something went wrong!" });
-  }
-});
-
-// ✅ Payment Success
-app.post("/payment/success/:tran_id", async (req, res) => {
-  const tran_id = req.params.tran_id;
-  const result = await FinalorderInfoCollaction.updateOne(
-    { tran_id: tran_id },
-    { $set: { paidstatus: "success" } }
-  );
-
-  if (result.modifiedCount > 0) {
-    res.redirect(`http://localhost:5173/payment/success/${tran_id}`);
-  } else {
-    res.status(400).send({ message: "Transaction not found or already updated" });
-  }
-});
-
-// ✅ Payment Fail
-app.post("/payment/fail/:tran_id", async (req, res) => {
-  const tran_id = req.params.tran_id;
-  const result = await FinalorderInfoCollaction.deleteOne({ tran_id: tran_id });
-
-  if (result.deletedCount > 0) {
-    res.redirect(`http://localhost:5173/payment/fail/${tran_id}`);
-  } else {
-    res.status(400).send({ message: "Transaction not found to delete" });
-  }
-});
-
-// ✅ Payment Cancel
-app.post("/payment/cancel/:tran_id", async (req, res) => {
-  const tran_id = req.params.tran_id;
-  const result = await FinalorderInfoCollaction.deleteOne({ tran_id: tran_id });
-
-  if (result.deletedCount > 0) {
-    res.redirect(`http://localhost:5173/payment/cancel/${tran_id}`);
-  } else {
-    res.status(400).send({ message: "Transaction not found to delete" });
-  }
-});
-
 
 //userCollection
 

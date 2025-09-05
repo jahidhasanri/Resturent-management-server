@@ -1,0 +1,229 @@
+const express = require('express')
+require('dotenv').config();
+const app = express()
+const cors=require('cors');
+const port = process.env.PROT || 5000;
+//middleware
+app.use(cors());
+app.use(express.json());
+
+
+
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const uri = `mongodb+srv://${process.env.RS_USER}:${process.env.RS_PASS}@cluster0.e8jg2.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+});
+
+async function run() {
+  try {
+
+const userCollaction = client.db("resturant-management").collection('users')
+const dishesCollaction = client.db("resturant-management").collection('ALLdishes')
+const wishListCollaction = client.db("resturant-management").collection('wishlist')
+const cardCollaction = client.db("resturant-management").collection('card')
+
+//userCollection
+
+app.post('/users', async (req, res) => {
+  const user = req.body;
+  const query = { email: user.email };
+console.log(user);
+  try {
+    const isExist = await userCollaction.findOne(query);
+    if (isExist) {
+      return res.status(200).send(isExist);
+    }
+
+    const result = await userCollaction.insertOne({
+      name: user.name,
+      image: user.image,
+      email: user.email,
+      role: "user",
+    });
+
+    res.status(201).send(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'server error' });
+  }
+});
+
+
+app.get('/users', async (req, res) => {
+  try {
+    const { email } = req.query;
+    const user = await userCollaction.findOne({ email: email });
+    
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    res.send(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Server error" });
+  }
+});
+
+app.get('/allusers',async(req,res)=>{
+  const alluser= userCollaction.find();
+  const result = await alluser.toArray();
+  res.send(result);
+})
+
+app.delete("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await userCollaction.deleteOne({ _id: new ObjectId(id) });
+      res.send(result);
+    });
+
+
+    app.put("/users/:id/role", async (req, res) => {
+      const id = req.params.id;
+      const { role } = req.body;
+      const result = await userCollaction.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { role } }
+      );
+      res.send(result);
+    });
+
+
+// dishesCollaction
+
+
+app.post('/alldishes',async(req,res)=>{
+  const user = req.body
+ const result= await dishesCollaction.insertOne(user);
+ res.send(result)
+})
+
+app.get('/allsdishes',async(req,res)=>{
+  const allItem = dishesCollaction.find();
+  const resutl = await allItem.toArray();
+  res.send(resutl);
+})
+
+ app.put("/dishes/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedDish = req.body;
+
+      try {
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            name: updatedDish.name,
+            price: updatedDish.price,
+            quantity: updatedDish.quantity,
+            image: updatedDish.image,
+            isBestSeller: updatedDish.isBestSeller,
+          },
+        };
+
+        const result = await dishesCollaction.updateOne(filter, updateDoc);
+        if (result.modifiedCount > 0) {
+          res.status(200).send({ message: "Dish updated successfully" });
+        } else {
+          res.status(404).send({ message: "No dish found or no changes made" });
+        }
+      } catch (error) {
+        console.error("Update error:", error);
+        res.status(500).send({ message: "Error updating dish" });
+      }
+    });
+
+app.delete('/allsdishes/:id',async(req,res)=>{
+const id = req.params.id;
+const query = {_id: new ObjectId(id)};
+const resutl = await dishesCollaction.deleteOne(query)
+res.send(resutl);
+})
+ 
+// wishLishtCollection
+app.post('/wishes',async(req,res)=>{
+  const user = req.body
+ const result= await wishListCollaction.insertOne(user);
+ res.send(result)
+})
+
+ app.get("/wishes", async (req, res) => {
+      const { userId } = req.query;
+      if (!userId) return res.status(400).json({ message: "userId required" });
+      try {
+        const wishes = await wishListCollaction
+          .find({ userId: userId })
+          .toArray();
+        res.json(wishes);
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+      }
+    });
+
+
+app.get('/wishlist',async(req,res)=>{
+  const allItem = wishListCollaction.find();
+  const result = await allItem.toArray();
+  res.send(result);
+})
+
+app.delete('/wishes/:id',async(req,res)=>{
+const id = req.params.id;
+const query = {_id: new ObjectId(id)};
+const resutl = await wishListCollaction.deleteOne(query)
+res.send(resutl);
+})
+
+
+//card collection
+
+app.post('/cardItem', async (req, res) => {
+  const item = req.body;
+  if (!item.userId) return res.status(400).send({ success: false, message: "userId required" });
+
+  const query = { itemId: item.itemId, userId: item.userId };
+  console.log("Query for checking duplicate:", query);
+
+  try {
+    const isExist = await cardCollaction.findOne(query);
+    if (isExist) {
+      return res.status(200).send({ success: false, message: 'Item already exists in cart' });
+    }
+
+    const result = await cardCollaction.insertOne(item);
+    res.status(201).send({ success: true, message: 'Item added to cart', result });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'server error' });
+  }
+});
+
+   
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+  } finally {
+    // Ensures that the client will close when you finish/error
+    // await client.close();
+  }
+}
+run().catch(console.dir);
+
+
+
+
+
+
+
+app.get('/', (req, res) => {
+  res.send('Hello World!')
+})
+
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`)
+})

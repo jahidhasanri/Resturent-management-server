@@ -51,8 +51,7 @@ const tran_id = new ObjectId().toString();
       tran_id
     });
 
-const orderIds = orders.map(order => new ObjectId(order._id));
-    await orderInfoCollaction.deleteOne({ _id: { $in: orderIds } });
+
     // SSLCommerz Payment Data
     const data = {
       total_amount: total,

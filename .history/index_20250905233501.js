@@ -40,7 +40,7 @@ const FinalorderInfoCollaction = client.db("resturant-management").collection('o
 app.post("/finalOrder", async (req, res) => {
   try {
     const { orders, user, total } = req.body;
-const tran_id = new ObjectId().toString();
+
     // Insert to DB
     const result = await FinalorderInfoCollaction.insertOne({
       orders,
@@ -48,11 +48,11 @@ const tran_id = new ObjectId().toString();
       total,
       paidstatus: "pending",
       createdAt: new Date(),
-      tran_id
+      tran_id : result.insertedId.toString()
     });
 
-const orderIds = orders.map(order => new ObjectId(order._id));
-    await orderInfoCollaction.deleteOne({ _id: { $in: orderIds } });
+    const tran_id = result.insertedId.toString();
+
     // SSLCommerz Payment Data
     const data = {
       total_amount: total,
@@ -101,40 +101,28 @@ const orderIds = orders.map(order => new ObjectId(order._id));
 app.post("/payment/success/:tran_id", async (req, res) => {
   const tran_id = req.params.tran_id;
   const result = await FinalorderInfoCollaction.updateOne(
-    { tran_id: tran_id },
+    { _id: new ObjectId(tran_id) },
     { $set: { paidstatus: "success" } }
   );
-
   if (result.modifiedCount > 0) {
     res.redirect(`http://localhost:5173/payment/success/${tran_id}`);
-  } else {
-    res.status(400).send({ message: "Transaction not found or already updated" });
   }
 });
 
 // ✅ Payment Fail
 app.post("/payment/fail/:tran_id", async (req, res) => {
   const tran_id = req.params.tran_id;
-  const result = await FinalorderInfoCollaction.deleteOne({ tran_id: tran_id });
-
-  if (result.deletedCount > 0) {
-    res.redirect(`http://localhost:5173/payment/fail/${tran_id}`);
-  } else {
-    res.status(400).send({ message: "Transaction not found to delete" });
-  }
+  await FinalorderInfoCollaction.deleteOne({ _id: new ObjectId(tran_id) });
+  res.redirect(`http://localhost:5173/payment/fail/${tran_id}`);
 });
 
 // ✅ Payment Cancel
 app.post("/payment/cancel/:tran_id", async (req, res) => {
   const tran_id = req.params.tran_id;
-  const result = await FinalorderInfoCollaction.deleteOne({ tran_id: tran_id });
-
-  if (result.deletedCount > 0) {
-    res.redirect(`http://localhost:5173/payment/cancel/${tran_id}`);
-  } else {
-    res.status(400).send({ message: "Transaction not found to delete" });
-  }
+  await FinalorderInfoCollaction.deleteOne({ _id: new ObjectId(tran_id) });
+  res.redirect(`http://localhost:5173/payment/cancel/${tran_id}`);
 });
+
 
 
 //userCollection
