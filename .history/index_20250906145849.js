@@ -125,22 +125,6 @@ app.post("/payment/fail/:tran_id", async (req, res) => {
   }
 });
 
-// Corrected route
-app.get("/order/:tran_id", async (req, res) => {
-  const tranId = req.params.tran_id;
-  try {
-    const result = await FinalorderInfoCollaction.findOne({ tran_id: tranId }); 
-    if (!result) {
-      return res.status(404).send({ message: "Order not found" });
-    }
-    res.send(result);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send({ message: "Server error" });
-  }
-});
-
-
 // ✅ Payment Cancel
 app.post("/payment/cancel/:tran_id", async (req, res) => {
   const tran_id = req.params.tran_id;
