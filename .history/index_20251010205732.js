@@ -173,11 +173,12 @@ app.get('/finalOrders', async (req, res) => {
   try {
     const { email } = req.query;
 
-console.log(email);
+    // যদি email না পাঠানো হয়
     if (!email) {
       return res.status(400).send({ message: "Email is required" });
     }
 
+    // MongoDB থেকে email অনুযায়ী ডেটা ফেচ
     const result = await FinalorderInfoCollaction.find({ "user.email": email }).toArray();
 
     res.send(result);
@@ -187,29 +188,12 @@ console.log(email);
   }
 });
 
-app.delete("/finalOrders/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-    const result = await FinalorderInfoCollaction.deleteOne({
-      _id: new ObjectId(id),
-    });
-
-    if (result.deletedCount > 0) {
-      res.send({ success: true, message: "Order deleted successfully" });
-    } else {
-      res.send({ success: false, message: "Order not found" });
-    }
-  } catch (error) {
-    console.error("Error deleting order:", error);
-    res.status(500).send({ success: false, message: "Server error" });
-  }
-});
-
 //userCollection
 
 app.post('/users', async (req, res) => {
   const user = req.body;
   const query = { email: user.email };
+console.log(user);
   try {
     const isExist = await userCollaction.findOne(query);
     if (isExist) {

@@ -151,58 +151,11 @@ app.post("/payment/cancel/:tran_id", async (req, res) => {
 });
 
 
-app.get("/finalorder",async(req,res)=>{
+
+app.get("finalorder",async(req,res)=>{
   const data=FinalorderInfoCollaction.find();
   const result = await data.toArray();
   res.send(result);
-});
-
-app.put("/finalorder/:id", async (req, res) => {
-  const { id } = req.params;
-  const { orderStatus } = req.body;
-
-  const result = await FinalorderInfoCollaction.updateOne(
-    { _id: new ObjectId(id) },
-    { $set: { orderStatus } }
-  );
-
-  res.send(result);
-});
-
-app.get('/finalOrders', async (req, res) => {
-  try {
-    const { email } = req.query;
-
-console.log(email);
-    if (!email) {
-      return res.status(400).send({ message: "Email is required" });
-    }
-
-    const result = await FinalorderInfoCollaction.find({ "user.email": email }).toArray();
-
-    res.send(result);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ message: "Server error" });
-  }
-});
-
-app.delete("/finalOrders/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-    const result = await FinalorderInfoCollaction.deleteOne({
-      _id: new ObjectId(id),
-    });
-
-    if (result.deletedCount > 0) {
-      res.send({ success: true, message: "Order deleted successfully" });
-    } else {
-      res.send({ success: false, message: "Order not found" });
-    }
-  } catch (error) {
-    console.error("Error deleting order:", error);
-    res.status(500).send({ success: false, message: "Server error" });
-  }
 });
 
 //userCollection
@@ -210,6 +163,7 @@ app.delete("/finalOrders/:id", async (req, res) => {
 app.post('/users', async (req, res) => {
   const user = req.body;
   const query = { email: user.email };
+console.log(user);
   try {
     const isExist = await userCollaction.findOne(query);
     if (isExist) {
@@ -269,13 +223,6 @@ app.delete("/users/:id", async (req, res) => {
       );
       res.send(result);
     });
-
-// app.put("/users/:id",async (req, res) => {
-//   const id = req.params.id;
-//     const data = req.body;
-//     console.log(data,id);
- 
-// });
 
 
 // dishesCollaction
@@ -476,7 +423,9 @@ app.get("/orderInfo", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
- 
+
+
+   
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error

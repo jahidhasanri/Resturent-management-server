@@ -188,28 +188,17 @@ console.log(email);
 });
 
 app.delete("/finalOrders/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-    const result = await FinalorderInfoCollaction.deleteOne({
-      _id: new ObjectId(id),
+      const id = req.params.id;
+      const result = await FinalorderInfoCollaction.deleteOne({ _id: new ObjectId(id) });
+      res.send(result);
     });
-
-    if (result.deletedCount > 0) {
-      res.send({ success: true, message: "Order deleted successfully" });
-    } else {
-      res.send({ success: false, message: "Order not found" });
-    }
-  } catch (error) {
-    console.error("Error deleting order:", error);
-    res.status(500).send({ success: false, message: "Server error" });
-  }
-});
 
 //userCollection
 
 app.post('/users', async (req, res) => {
   const user = req.body;
   const query = { email: user.email };
+console.log(user);
   try {
     const isExist = await userCollaction.findOne(query);
     if (isExist) {
