@@ -64,10 +64,10 @@ const orderIds = orders.map(order => new ObjectId(order._id));
       total_amount: total,
       currency: "BDT",
       tran_id,
-      success_url: `https://resturent-management-server-three.vercel.app/payment/success/${tran_id}`,
-      fail_url: `https://resturent-management-server-three.vercel.app/payment/fail/${tran_id}`,
-      cancel_url: `https://resturent-management-server-three.vercel.app/payment/cancel/${tran_id}`,
-      ipn_url: "https://resturent-management-server-three.vercel.app/payment/ipn",
+      success_url: `http://localhost:5000/payment/success/${tran_id}`,
+      fail_url: `http://localhost:5000/payment/fail/${tran_id}`,
+      cancel_url: `http://localhost:5000/payment/cancel/${tran_id}`,
+      ipn_url: "http://localhost:5000/payment/ipn",
       shipping_method: "Courier",
       product_name: "Food Items",
       product_category: "Restaurant",
@@ -112,7 +112,7 @@ app.post("/payment/success/:tran_id", async (req, res) => {
   );
 
   if (result.modifiedCount > 0) {
-    res.redirect(`https://resturant-management-39d86.web.app/payment/success/${tran_id}`);
+    res.redirect(`http://localhost:5173/payment/success/${tran_id}`);
   } else {
     res.status(400).send({ message: "Transaction not found or already updated" });
   }
@@ -123,7 +123,7 @@ app.post("/payment/fail/:tran_id", async (req, res) => {
   const result = await FinalorderInfoCollaction.deleteOne({ tran_id: tran_id });
 
   if (result.deletedCount > 0) {
-    res.redirect(`https://resturant-management-39d86.web.app/payment/fail/${tran_id}`);
+    res.redirect(`http://localhost:5173/payment/fail/${tran_id}`);
   } else {
     res.status(400).send({ message: "Transaction not found to delete" });
   }
@@ -149,7 +149,7 @@ app.post("/payment/cancel/:tran_id", async (req, res) => {
   const result = await FinalorderInfoCollaction.deleteOne({ tran_id: tran_id });
 
   if (result.deletedCount > 0) {
-    res.redirect(`https://resturant-management-39d86.web.app/payment/cancel/${tran_id}`);
+    res.redirect(`http://localhost:5173/payment/cancel/${tran_id}`);
   } else {
     res.status(400).send({ message: "Transaction not found to delete" });
   }
@@ -499,14 +499,7 @@ app.post("/addReview", async (req, res) => {
         message: "You can only review items you have purchased!",
       });
     }
-     const product = await dishesCollaction.findOne({ _id: new ObjectId(productId) });
-    const alreadyReviewed = product?.customerReview?.some((r) => r.userId === userId);
-
-    if (alreadyReviewed) {
-      return res
-        .status(400)
-        .json({ success: false, message: "You have already reviewed this product." });
-    }
+    
 
     // 2️⃣ Push review into product’s customerReview array
     const reviewData = {

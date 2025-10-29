@@ -4,12 +4,11 @@ require('dotenv').config();
 const app = express()
 const cors=require('cors');
 const port = process.env.PROT || 5000;
-
 //middleware
 app.use(cors());
 app.use(express.json());
 app.use('/images', express.static('images', {
-  maxAge: '7d',
+  maxAge: '7d', // cache for 7 days
   etag: true,
 }));
 
@@ -64,10 +63,10 @@ const orderIds = orders.map(order => new ObjectId(order._id));
       total_amount: total,
       currency: "BDT",
       tran_id,
-      success_url: `https://resturent-management-server-three.vercel.app/payment/success/${tran_id}`,
-      fail_url: `https://resturent-management-server-three.vercel.app/payment/fail/${tran_id}`,
-      cancel_url: `https://resturent-management-server-three.vercel.app/payment/cancel/${tran_id}`,
-      ipn_url: "https://resturent-management-server-three.vercel.app/payment/ipn",
+      success_url: `http://localhost:5173//payment/success/${tran_id}`,
+      fail_url: `http://localhost:5173//payment/fail/${tran_id}`,
+      cancel_url: `http://localhost:5173//payment/cancel/${tran_id}`,
+      ipn_url: "http://localhost:5173//payment/ipn",
       shipping_method: "Courier",
       product_name: "Food Items",
       product_category: "Restaurant",
@@ -112,7 +111,7 @@ app.post("/payment/success/:tran_id", async (req, res) => {
   );
 
   if (result.modifiedCount > 0) {
-    res.redirect(`https://resturant-management-39d86.web.app/payment/success/${tran_id}`);
+    res.redirect(`http://localhost:5173/payment/success/${tran_id}`);
   } else {
     res.status(400).send({ message: "Transaction not found or already updated" });
   }
@@ -123,7 +122,7 @@ app.post("/payment/fail/:tran_id", async (req, res) => {
   const result = await FinalorderInfoCollaction.deleteOne({ tran_id: tran_id });
 
   if (result.deletedCount > 0) {
-    res.redirect(`https://resturant-management-39d86.web.app/payment/fail/${tran_id}`);
+    res.redirect(`http://localhost:5173/payment/fail/${tran_id}`);
   } else {
     res.status(400).send({ message: "Transaction not found to delete" });
   }
@@ -149,7 +148,7 @@ app.post("/payment/cancel/:tran_id", async (req, res) => {
   const result = await FinalorderInfoCollaction.deleteOne({ tran_id: tran_id });
 
   if (result.deletedCount > 0) {
-    res.redirect(`https://resturant-management-39d86.web.app/payment/cancel/${tran_id}`);
+    res.redirect(`http://localhost:5173/payment/cancel/${tran_id}`);
   } else {
     res.status(400).send({ message: "Transaction not found to delete" });
   }
@@ -177,6 +176,8 @@ app.put("/finalorder/:id", async (req, res) => {
 app.get('/finalOrders', async (req, res) => {
   try {
     const { email } = req.query;
+
+console.log(email);
     if (!email) {
       return res.status(400).send({ message: "Email is required" });
     }
@@ -374,7 +375,7 @@ app.post('/cardItem', async (req, res) => {
   if (!item.userId) return res.status(400).send({ success: false, message: "userId required" });
 
   const query = { itemId: item.itemId, userId: item.userId };
-
+  console.log("Query for checking duplicate:", query);
 
   try {
     const isExist = await cardCollaction.findOne(query);
@@ -407,7 +408,7 @@ app.get("/cardItems", async (req, res) => {
 
 app.delete('/cardItems/:id',async(req,res)=>{
 const id = req.params.id;
-
+console.log(id);
 const query = {_id: new ObjectId(id)};
 const resutl = await cardCollaction.deleteOne(query)
 res.send(resutl);
@@ -479,62 +480,6 @@ app.get("/orderInfo", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-
-// review
-
-app.post("/addReview", async (req, res) => {
-  try {
-    const { productId, userId, userName, userImage, rating, comment } = req.body;
-
-    // 1️⃣ Check if user purchased this item
-    const purchased = await FinalorderInfoCollaction.findOne({
-      "orders.items.itemId": productId,
-      "orders.userId": userId,
-      orderStatus: "Completed",
-    });
-
-    if (!purchased) {
-      return res.status(403).json({
-        success: false,
-        message: "You can only review items you have purchased!",
-      });
-    }
-     const product = await dishesCollaction.findOne({ _id: new ObjectId(productId) });
-    const alreadyReviewed = product?.customerReview?.some((r) => r.userId === userId);
-
-    if (alreadyReviewed) {
-      return res
-        .status(400)
-        .json({ success: false, message: "You have already reviewed this product." });
-    }
-
-    // 2️⃣ Push review into product’s customerReview array
-    const reviewData = {
-      userId,
-      userName,
-      userImage,
-      rating,
-      comment,
-      createdAt: new Date(),
-    };
-
-    const result = await dishesCollaction.updateOne(
-      { _id: new ObjectId(productId) },
-      { $push: { customerReview: reviewData } }
-    );
-
-    res.json({
-      success: true,
-      message: "Review added successfully!",
-      result,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-
  
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
